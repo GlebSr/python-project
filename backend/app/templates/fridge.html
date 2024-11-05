@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Мой холодильник</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #f8f3e9;
+            color: #555555;
+        }
+        .container {
+            margin-top: 2%;
+            max-width: 100%;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            font-size: 2em;
+            color: #6d758f;
+        }
+        .btn-main, .btn-back {
+            background-color: #92b4a7;
+            border: none;
+            color: white;
+            font-size: 1em;
+            padding: 10px 15px;
+            margin: 5px;
+        }
+        .btn-edit:hover, .btn-delete:hover {
+            opacity: 0.8;
+        }
+        .btn-back {
+            background-color: #a5c9ca;
+        }
+        .card {
+            display: flex;
+            flex-direction: row;
+            background-color: #ece9e5;
+            border: none;
+            border-radius: 10px;
+            margin: 10px;
+        }
+        .card-body {
+            flex: 1; /* Занимает оставшееся пространство */
+            padding: 10px;
+        }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .status {
+            border-radius: 5px;
+            padding: 5px 10px;
+            font-weight: bold;
+        }
+        .status-fresh {
+            color: #ffffff;
+            background-color: #6da06f;
+        }
+        .status-warning {
+            color: #ffffff;
+            background-color: #d2a14b;
+        }
+        .status-expired {
+            color: #ffffff;
+            background-color: #d95d5d;
+        }
+        .details, .actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+        }
+        .btn-edit, .btn-delete {
+            background-color: transparent;
+            border: none;
+            color: #555555;
+            font-size: 1.2em;
+            cursor: pointer;
+        }
+        .btns {
+            display: flex;
+        }
+        .actions {
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* Центрируем кнопки */
+            justify-content: center; /* Вертикальное центрирование */
+            gap: 10px; /* Расстояние между кнопками */
+            padding: 10px;
+            margin: 0;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-dialog {
+            max-width: 500px;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Мой холодильник</h1>
+            <div class="btns">
+                <button class="btn btn-back" onclick="window.location.href='/'">На главную</button>
+                <button class="btn btn-main btn-add-product" onclick="openAddModal()">Добавить продукт</button>
+            </div>
+        </div>
+
+        <!-- Модальное окно для редактирования продукта -->
+        <div id="editModal" class="modal" tabindex="-1" role="dialog" style="display: none;">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Редактировать продукт</h5>
+                        <button type="button" class="close" onclick="closeEditModal()">
+                            <span>&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="editForm">
+                            <div class="form-group">
+                                <label for="editQuantity">Количество</label>
+                                <input type="number" class="form-control" id="editQuantity" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="editProductionDate">Дата производства</label>
+                                <input type="date" class="form-control" id="editProductionDate" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="editExpirationDate">Дата истечения срока</label>
+                                <input type="date" class="form-control" id="editExpirationDate" required>
+                            </div>
+                            <button type="button" class="btn btn-primary" onclick="submitEditForm()">Сохранить изменения</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Модальное окно для добавления продукта -->
+        <div id="addModal" class="modal" tabindex="-1" role="dialog" style="display: none;">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Добавить продукт в холодильник</h5>
+                        <button type="button" class="close" onclick="closeAddModal()">
+                            <span>&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Поле поиска продуктов -->
+                        <form id="searchForm">
+                            <div class="form-group">
+                                <label for="searchProduct">Поиск продуктов</label>
+                                <div class="d-flex">
+                                    <input type="text" class="form-control" id="searchProduct" placeholder="Введите название продукта">
+                                    <button type="button" class="btn btn-primary ml-2" onclick="searchProducts()">Поиск</button>
+                                </div>
+                            </div>
+                        </form>
+
+                        <!-- Результаты поиска -->
+                        <div id="searchResults" style="max-height: 200px; overflow-y: auto;">
+                            <!-- Результаты поиска будут отображаться здесь -->
+                        </div>
+
+                        <!-- Поля для добавления выбранного продукта -->
+                        <div id="productDetails" style="display: none;">
+                            <div class="form-group">
+                                <label for="addQuantity">Количество</label>
+                                <input type="number" class="form-control" id="addQuantity" placeholder="Укажите количество" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="addProductionDate">Дата производства</label>
+                                <input type="date" class="form-control" id="addProductionDate" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="addExpirationDate">Дата истечения срока</label>
+                                <input type="date" class="form-control" id="addExpirationDate" required>
+                            </div>
+                            <button type="button" class="btn btn-primary" onclick="submitAddForm()">Добавить в холодильник</button>
+                        </div>
+
+                        <!-- Кнопка для создания нового продукта -->
+                        <button type="button" class="btn btn-secondary mt-3" onclick="openCreateProductModal()">Создать новый продукт</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Модальное окно для создания нового продукта -->
+        <div id="createProductModal" class="modal" tabindex="-1" role="dialog" style="display: none;">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Создать новый продукт</h5>
+                        <button type="button" class="close" onclick="closeCreateProductModal()">
+                            <span>&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="createProductForm">
+                            <div class="form-group">
+                                <label for="productName">Название</label>
+                                <input type="text" class="form-control" id="productName" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="expirationPeriod">Срок годности(дней)</label>
+                                <input type="number" class="form-control" id="expirationPeriod" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="kcal">Калории</label>
+                                <input type="number" class="form-control" id="kcal" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="protein">Белки</label>
+                                <input type="number" class="form-control" id="protein" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="fat">Жиры</label>
+                                <input type="number" class="form-control" id="fat" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="carbs">Углеводы</label>
+                                <input type="number" class="form-control" id="carbs" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="description">Описание</label>
+                                <textarea class="form-control" id="description"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="unitType">Тип единицы измерения</label>
+                                <select class="form-control" id="unitType" required>
+                                    <option value="milliliters">Миллилитры</option>
+                                    <option value="grams">Граммы</option>
+                                    <option value="pieces">Штуки</option>
+                                </select>
+                            </div>
+                            <button type="button" class="btn btn-primary" onclick="submitCreateProductForm()">Создать продукт</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="row" id="products-container">
+        </div>
+    </div>
+
+    <script>
+        var userId = ""
+        let currentItem = null;
+        let selectedProduct = null;
+
+        // Открытие модального окна создания нового продукта
+        function openCreateProductModal() {
+            document.getElementById("createProductModal").style.display = "flex";
+        }
+
+        // Закрытие модального окна создания продукта
+        function closeCreateProductModal() {
+            document.getElementById("createProductModal").style.display = "none";
+        }
+
+        // Отправка данных нового продукта на сервер
+        async function submitCreateProductForm() {
+            const newProduct = {
+                code: 0,
+                name: document.getElementById("productName").value,
+                expiration_period: parseInt(document.getElementById("expirationPeriod").value),
+                kcal: parseFloat(document.getElementById("kcal").value),
+                protein: parseFloat(document.getElementById("protein").value),
+                fat: parseFloat(document.getElementById("fat").value),
+                carbs: parseFloat(document.getElementById("carbs").value),
+                description: document.getElementById("description").value,
+                unit_type: document.getElementById("unitType").value
+            };
+
+            try {
+                const response = await fetch(`/api/products/${userId}`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(newProduct)
+                });
+
+                if (response.ok) {
+                    alert("Продукт успешно создан!");
+                    closeCreateProductModal();
+                    openAddModal(); // Возвращаемся к форме добавления продукта
+                } else {
+                    alert("Ошибка при создании продукта.");
+                }
+            } catch (error) {
+                console.error("Ошибка:", error);
+            }
+        }
+
+        // Открытие модального окна для добавления продукта
+        function openAddModal() {
+            document.getElementById("addModal").style.display = "flex";
+        }
+
+        // Закрытие модального окна
+        function closeAddModal() {
+            fetchFridgeItems(userId)
+            document.getElementById("addModal").style.display = "none";
+            selectedProduct = null;
+            document.getElementById("searchResults").innerHTML = "";
+            document.getElementById("productDetails").style.display = "none";
+        }
+
+        // Функция поиска продуктов
+        async function searchProducts() {
+            const searchQuery = document.getElementById("searchProduct").value;
+            if (!searchQuery) return;
+            console.log(searchQuery)
+            try {
+                const response = await fetch(`/api/products/search/${userId}?name=${encodeURIComponent(searchQuery)}`);
+                const products = await response.json();
+
+                const resultsContainer = document.getElementById("searchResults");
+                resultsContainer.innerHTML = "";
+
+                products.forEach(product => {
+                    const productItem = document.createElement("div");
+                    productItem.className = "product-item p-2";
+                    productItem.innerText = product.name;
+                    productItem.onclick = () => selectProduct(product);
+                    resultsContainer.appendChild(productItem);
+                });
+            } catch (error) {
+                console.error("Ошибка поиска продуктов:", error);
+            }
+        }
+
+        // Функция выбора продукта
+        function selectProduct(product) {
+            selectedProduct = product;
+            document.getElementById("productDetails").style.display = "block";
+        }
+
+        // Функция отправки данных формы на сервер
+        async function submitAddForm() {
+            const newItem = {
+                product_id: selectedProduct.id,
+                quantity: parseFloat(document.getElementById("addQuantity").value),
+                production_date: new Date(document.getElementById("addProductionDate").value).toISOString(),
+                expiration_date: new Date(document.getElementById("addExpirationDate").value).toISOString()
+            };
+
+            try {
+                const response = await fetch(`/api/fridge/${userId}/items`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(newItem)
+                });
+
+                if (response.ok) {
+                    alert("Продукт добавлен в холодильник!");
+                    closeAddModal();
+                    // Обновите страницу или интерфейс после успешного добавления
+                    populateProducts(); // Функция обновления
+                } else {
+                    alert("Ошибка при добавлении продукта.");
+                }
+            } catch (error) {
+                console.error("Ошибка:", error);
+            }
+        }
+
+
+        function editProduct(item) {
+            currentItem = item; // Сохраняем текущий редактируемый элемент
+
+            // Заполняем форму данными
+            document.getElementById("editQuantity").value = item.quantity;
+            document.getElementById("editProductionDate").value = new Date(item.production_date).toISOString().split("T")[0];
+            document.getElementById("editExpirationDate").value = new Date(item.expiration_date).toISOString().split("T")[0];
+
+            // Отображаем модальное окно
+            document.getElementById("editModal").style.display = "flex";
+        }
+
+        function closeEditModal() {
+            document.getElementById("editModal").style.display = "none";
+            currentItem = null;
+        }
+
+        async function submitEditForm() {
+            const updatedItem = {
+                id: currentItem.id,
+                product_id: currentItem.product_id,
+                quantity: parseFloat(document.getElementById("editQuantity").value),
+                production_date: new Date(document.getElementById("editProductionDate").value).toISOString(),
+                expiration_date: new Date(document.getElementById("editExpirationDate").value).toISOString()
+            };
+
+            try {
+                // Отправляем PUT-запрос для обновления продукта
+                const response = await fetch(`/api/fridge/${userId}/items`, {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(updatedItem)
+                });
+
+                if (response.ok) {
+                    alert("Продукт успешно обновлен!");
+                    fetchFridgeItems(userId)
+                    closeEditModal();
+                    // Обновите страницу или интерфейс после успешного обновления
+
+                } else {
+                    alert("Ошибка при обновлении продукта.");
+                }
+            } catch (error) {
+                console.error("Ошибка:", error);
+            }
+        }
+        async function displayFridgeItems(items) {
+            const container = document.getElementById("products-container");
+
+             container.innerHTML = "";
+            for (const pos in items) {
+                try {
+                    const item = items[pos]
+                    const response = await fetch(`/api/products/${userId}/${item.product_id}`);
+                    const product = await response.json();
+
+                    // Определяем статус свежести на основе даты истечения срока
+                    const isFresh = new Date(item.expiration_date) > new Date();
+                    const status = isFresh ? "Свежий" : "Просрочен";
+                    const statusClass = isFresh ? "status-fresh" : "status-expired";
+
+                    // Генерируем HTML-карточку
+                    const cardHTML = `
+                        <div class="col-md-4">
+                            <div class="card d-flex flex-row justify-content-between align-items-start">
+                                <div class="card-body">
+                                    <div class="card-header d-flex justify-content-between">
+                                        <span>${product.name}</span>
+                                        <span class="status ${statusClass}">${status}</span>
+                                    </div>
+                                    <div class="details">
+                                        <p>Количество: ${item.quantity} ${product.unit_type}</p>
+                                        <p>Срок годности: ${new Date(item.expiration_date).toISOString().split("T")[0]}</p>
+                                    </div>
+                                </div>
+                                <div class="actions d-flex flex-column align-items-center ml-3">
+                                    <button class="btn-edit mb-2" onclick="editProduct({ id: '${item.id}', product_id: '${item.product_id}', quantity: ${item.quantity}, production_date: '${item.production_date}', expiration_date: '${item.expiration_date}' })">
+                                        <img src="/static/edit.png" style="width: 25px; height: 25px;">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn-delete" onclick="deleteFridgeItem('${userId}', '${item.id}')">
+                                        <img src="/static/bin.png" style="width: 25px; height: 25px;">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
+                    // Добавляем карточку в контейнер
+                    container.insertAdjacentHTML("beforeend", cardHTML);
+                } catch (error) {
+                    console.error("Ошибка при загрузке данных о продукте:", error);
+                }
+            }
+        }
+        async function fetchFridgeItems(userId) {
+            const response = await fetch(`/api/fridge/${userId}`);
+            if (response.ok) {
+                const fridge = await response.json();
+                console.log(fridge)
+                displayFridgeItems(fridge.items); // функция для отображения списка продуктов
+            }
+        }
+        async function deleteFridgeItem(userId, itemId) {
+            const response = await fetch(`/api/fridge/${userId}/items/${itemId}`, {
+                method: 'DELETE'
+            });
+            if (response.ok) {
+                fetchFridgeItems(userId); // обновляем список после удаления
+            } else {
+                alert("Ошибка при удалении продукта");
+            }
+        }
+
+        window.onload = function () {
+            userId = document.cookie.substring(document.cookie.indexOf("=") + 1)
+            fetchFridgeItems(userId)
+        }
+
+    </script>
+</body>
+</html>
