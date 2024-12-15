@@ -1,8 +1,10 @@
 import os
-from motor.motor_asyncio import AsyncIOMotorClient
+from typing import Any, Mapping
+
+from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorCollection
 from pymongo.collection import Collection
 
-
+#Почему-то не видит из env файла
 MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
 DATABASE_NAME = os.getenv("DATABASE_NAME", "control_db")
 MONGO_INITDB_ROOT_USERNAME = os.getenv("MONGO_INITDB_ROOT_USERNAME", "admin")
@@ -23,11 +25,10 @@ class MongoDB:
         if self.client:
             await self.client.close()
 
-    def get_collection(self, collection_name: str) -> Collection:
+    def get_collection(self, collection_name: str) -> AsyncIOMotorCollection[Mapping[str, Any] | Any]:
         return self.db[collection_name]
 
 
-# Экземпляр MongoDB для работы с базой данных
 mongodb = MongoDB()
 
 def get_db() -> MongoDB:

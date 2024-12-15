@@ -1,4 +1,3 @@
-# api/product.py
 from fastapi import APIRouter, Depends, HTTPException
 from typing import List
 from backend.app.models.product import *
@@ -8,17 +7,18 @@ from backend.app.database import get_db
 router = APIRouter()
 
 @router.post("/{user_id}", response_model=str)
-async def create_product(user_id: str, product: ProductCreate, db=Depends(get_db)):
+async def create_product(user_id: str, product: ProductCreate, db=Depends(get_db)) -> str:
+    print(ProductCreate.dict)
     product_crud = ProductCRUD(db)
     product_id = await product_crud.create_product(user_id, product)
     return product_id
 
 @router.get("/search/{user_id}", response_model=List[Product])
-async def search_products(user_id: str, name: str, db=Depends(get_db)):
+async def search_products(user_id: str, name: str, db=Depends(get_db)) -> List[Product]:
     product_crud = ProductCRUD(db)
     return await product_crud.get_products_by_name(user_id, name)
 @router.get("/{user_id}", response_model=Product)
-async def get_product(user_id: str, product_id: str, db=Depends(get_db)):
+async def get_product(user_id: str, product_id: str, db=Depends(get_db)) -> Product:
     product_crud = ProductCRUD(db)
     print(product_id)
     product = await product_crud.get_product_by_id(user_id, product_id)

@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+    <title>Financial Dashboard</title>
+
+    <!-- Минимальный стиль -->
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            color: #333;
+            background: #fff;
+        }
+
+        header {
+            background: #f5f5f5;
+            padding: 20px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+
+        .filters {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin: 20px;
+        }
+
+        .filters label {
+            font-weight: bold;
+        }
+
+        .filters input, .filters select, .forms input, .forms select {
+            padding: 5px;
+            font-size: 14px;
+        }
+
+        .filters button, .forms button {
+            padding: 8px 12px;
+            background: #007bff;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+
+        .filters button:hover, .forms button:hover {
+            background: #0056b3;
+        }
+
+        .cards {
+            display: flex;
+            gap: 20px;
+            margin: 20px;
+        }
+
+        .card {
+            flex: 1;
+            background: #fafafa;
+            border: 1px solid #ddd;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .card h2 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: normal;
+            color: #666;
+        }
+
+        .card .value {
+            font-size: 24px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .charts {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin: 20px;
+        }
+
+        .chart-container {
+            flex: 1 1 450px;
+            background: #fafafa;
+            border: 1px solid #ddd;
+            padding: 20px;
+        }
+
+        .transactions {
+            margin: 20px;
+            border: 1px solid #ddd;
+            background: #fafafa;
+        }
+
+        .transactions table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .transactions th, .transactions td {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+            font-size: 14px;
+            text-align: left;
+        }
+
+        .transactions th {
+            background: #f5f5f5;
+        }
+
+        .forms {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin: 20px;
+            padding: 20px;
+            background: #f9f9f9;
+            border-top: 1px solid #ddd;
+        }
+
+        .form-block {
+            background: #fff;
+            border: 1px solid #ddd;
+            padding: 20px;
+            flex: 1 1 300px;
+        }
+
+        .form-block h3 {
+            margin-top: 0;
+        }
+
+        .form-block label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .form-block input, .form-block select {
+            margin-bottom: 10px;
+            width: 100%;
+        }
+
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Financial Dashboard</h1>
+    </header>
+
+    <div class="filters">
+        <div>
+            <label>Start date: </label>
+            <input type="date" id="start_date">
+        </div>
+        <div>
+            <label>End date: </label>
+            <input type="date" id="end_date">
+        </div>
+        <div>
+            <label>Category: </label>
+            <select id="category_select">
+                <option value="">All</option>
+            </select>
+        </div>
+        <button id="apply_filters">Apply</button>
+    </div>
+
+    <div class="cards">
+        <div class="card">
+            <h2>Total Income</h2>
+            <div class="value" id="total_income_val">0</div>
+        </div>
+        <div class="card">
+            <h2>Total Expense</h2>
+            <div class="value" id="total_expense_val">0</div>
+        </div>
+        <div class="card">
+            <h2>Balance</h2>
+            <div class="value" id="balance_val">0</div>
+        </div>
+    </div>
+
+    <div class="charts">
+        <div class="chart-container">
+            <h3>Incomes & Expenses Over Time</h3>
+            <canvas id="line_chart"></canvas>
+        </div>
+        <div class="chart-container">
+            <h3>Expenses by Category</h3>
+            <canvas id="pie_chart"></canvas>
+        </div>
+    </div>
+
+    <div class="transactions">
+        <h3 style="padding:20px 20px 0 20px; margin:0;">Transactions</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Type</th>
+                    <th>Category</th>
+                    <th>Description/Source</th>
+                    <th>Amount</th>
+                </tr>
+            </thead>
+            <tbody id="transactions_body">
+            </tbody>
+        </table>
+    </div>
+
+    <div class="forms">
+        <!-- Форма для добавления категории -->
+        <div class="form-block">
+            <h3>Add Category</h3>
+            <label for="cat_name">Name</label>
+            <input type="text" id="cat_name" placeholder="Category Name">
+            <label for="cat_type">Type</label>
+            <select id="cat_type">
+                <option value="income">Income</option>
+                <option value="expense">Expense</option>
+            </select>
+            <button id="add_category_btn">Add Category</button>
+        </div>
+
+        <!-- Форма для добавления дохода -->
+        <div class="form-block">
+            <h3>Add Income</h3>
+            <label for="income_source">Source</label>
+            <input type="text" id="income_source" placeholder="Income Source">
+            <label for="income_amount">Amount</label>
+            <input type="number" step="0.01" id="income_amount" placeholder="Amount">
+            <label for="income_date">Date</label>
+            <input type="date" id="income_date">
+            <label for="income_cat">Category</label>
+            <select id="income_cat">
+                <!-- Категории доходов -->
+            </select>
+            <button id="add_income_btn">Add Income</button>
+        </div>
+
+        <!-- Форма для добавления расхода -->
+        <div class="form-block">
+            <h3>Add Expense</h3>
+            <label for="expense_desc">Description</label>
+            <input type="text" id="expense_desc" placeholder="Expense Description">
+            <label for="expense_amount">Amount</label>
+            <input type="number" step="0.01" id="expense_amount" placeholder="Amount">
+            <label for="expense_date">Date</label>
+            <input type="date" id="expense_date">
+            <label for="expense_cat">Category</label>
+            <select id="expense_cat">
+                <!-- Категории расходов -->
+            </select>
+            <button id="add_expense_btn">Add Expense</button>
+        </div>
+    </div>
+
+    <!-- Подключение Chart.js (CDN) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        var userId = ""; // подставьте реальный user_id
+        const apiBaseUrl = "/api/budget";
+
+        const startDateInput = document.getElementById("start_date");
+        const endDateInput = document.getElementById("end_date");
+        const categorySelect = document.getElementById("category_select");
+        const applyFiltersBtn = document.getElementById("apply_filters");
+
+        const totalIncomeVal = document.getElementById("total_income_val");
+        const totalExpenseVal = document.getElementById("total_expense_val");
+        const balanceVal = document.getElementById("balance_val");
+
+        const transactionsBody = document.getElementById("transactions_body");
+
+        let lineChart;
+        let pieChart;
+
+        // Поля для форм
+        const addCategoryBtn = document.getElementById("add_category_btn");
+        const catNameInput = document.getElementById("cat_name");
+        const catTypeSelect = document.getElementById("cat_type");
+
+        const addIncomeBtn = document.getElementById("add_income_btn");
+        const incomeSourceInput = document.getElementById("income_source");
+        const incomeAmountInput = document.getElementById("income_amount");
+        const incomeDateInput = document.getElementById("income_date");
+        const incomeCatSelect = document.getElementById("income_cat");
+
+        const addExpenseBtn = document.getElementById("add_expense_btn");
+        const expenseDescInput = document.getElementById("expense_desc");
+        const expenseAmountInput = document.getElementById("expense_amount");
+        const expenseDateInput = document.getElementById("expense_date");
+        const expenseCatSelect = document.getElementById("expense_cat");
+
+        // Загрузка категорий при старте
+        async function loadCategories() {
+            // Очищаем селекты категорий
+            categorySelect.innerHTML = '<option value="">All</option>';
+            incomeCatSelect.innerHTML = '';
+            expenseCatSelect.innerHTML = '';
+
+            const res = await fetch(`${apiBaseUrl}/categories/${userId}`);
+            const categories = await res.json();
+
+            // Заполнение общего фильтра
+            categories.forEach(cat => {
+                const option = document.createElement("option");
+                option.value = cat.id;
+                option.textContent = cat.name;
+                categorySelect.appendChild(option);
+            });
+
+            // Заполнение категорий для доходов
+            categories.filter(c => c.type === 'income').forEach(cat => {
+                const option = document.createElement("option");
+                option.value = cat.id;
+                option.textContent = cat.name;
+                incomeCatSelect.appendChild(option);
+            });
+
+            // Заполнение категорий для расходов
+            categories.filter(c => c.type === 'expense').forEach(cat => {
+                const option = document.createElement("option");
+                option.value = cat.id;
+                option.textContent = cat.name;
+                expenseCatSelect.appendChild(option);
+            });
+        }
+
+        async function loadAnalytics() {
+            const params = new URLSearchParams();
+            if (startDateInput.value) params.append("start_date", new Date(startDateInput.value).toISOString());
+            if (endDateInput.value) params.append("end_date", new Date(endDateInput.value).toISOString());
+            if (categorySelect.value) params.append("category_id", categorySelect.value);
+
+            const url = `${apiBaseUrl}/analytics/${userId}?` + params.toString();
+            const res = await fetch(url);
+            const data = await res.json();
+
+            // Обновляем карточки
+            totalIncomeVal.textContent = data.total_income.toFixed(2);
+            totalExpenseVal.textContent = data.total_expense.toFixed(2);
+            balanceVal.textContent = data.balance.toFixed(2);
+
+            // Обновляем линейный график
+            updateLineChart(data.incomes_over_time, data.expenses_over_time);
+
+            // Обновляем круговой график
+            updatePieChart(data.expense_by_category);
+
+            // Загрузка транзакций для таблицы
+            await loadTransactions();
+        }
+
+        async function loadTransactions() {
+            const incomesRes = await fetch(`${apiBaseUrl}/incomes/${userId}`);
+            const allIncomes = await incomesRes.json();
+
+            const expensesRes = await fetch(`${apiBaseUrl}/expenses/${userId}`);
+            const allExpenses = await expensesRes.json();
+
+            const start = startDateInput.value ? new Date(startDateInput.value) : null;
+            const end = endDateInput.value ? new Date(endDateInput.value) : null;
+            const catId = categorySelect.value || null;
+
+            function inDateRange(d) {
+                if (start && d < start) return false;
+                if (end && d > end) return false;
+                return true;
+            }
+
+            const filteredIncomes = allIncomes.filter(i => {
+                const dt = new Date(i.date);
+                return inDateRange(dt) && (!catId || i.category_id === catId);
+            });
+
+            const filteredExpenses = allExpenses.filter(e => {
+                const dt = new Date(e.date);
+                return inDateRange(dt) && (!catId || e.category_id === catId);
+            });
+
+            // Очищаем таблицу
+            transactionsBody.innerHTML = "";
+
+            // Добавляем доходы
+            filteredIncomes.forEach(i => {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td>${new Date(i.date).toLocaleDateString()}</td>
+                    <td>Income</td>
+                    <td>${i.category_id || "N/A"}</td>
+                    <td>${i.source}</td>
+                    <td style="color:green;">+${i.amount.toFixed(2)}</td>
+                `;
+                transactionsBody.appendChild(tr);
+            });
+
+            // Добавляем расходы
+            filteredExpenses.forEach(e => {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td>${new Date(e.date).toLocaleDateString()}</td>
+                    <td>Expense</td>
+                    <td>${e.category_id || "N/A"}</td>
+                    <td>${e.description || ""}</td>
+                    <td style="color:red;">-${e.amount.toFixed(2)}</td>
+                `;
+                transactionsBody.appendChild(tr);
+            });
+        }
+
+        function updateLineChart(incomesOverTime, expensesOverTime) {
+            const datesSet = new Set();
+            incomesOverTime.forEach(i => datesSet.add(i.date));
+            expensesOverTime.forEach(e => datesSet.add(e.date));
+            const allDates = Array.from(datesSet).sort();
+
+            const incomeDataMap = {};
+            incomesOverTime.forEach(i => { incomeDataMap[i.date] = i.total_income; });
+            const expenseDataMap = {};
+            expensesOverTime.forEach(e => { expenseDataMap[e.date] = e.total_expense; });
+
+            const incomeData = allDates.map(d => incomeDataMap[d] || 0);
+            const expenseData = allDates.map(d => expenseDataMap[d] || 0);
+
+            if (lineChart) {
+                lineChart.destroy();
+            }
+
+            const ctx = document.getElementById('line_chart').getContext('2d');
+            lineChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: allDates,
+                    datasets: [
+                        {
+                            label: 'Income',
+                            data: incomeData,
+                            borderColor: 'green',
+                            fill: false
+                        },
+                        {
+                            label: 'Expense',
+                            data: expenseData,
+                            borderColor: 'red',
+                            fill: false
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: { title: { display: true, text: 'Date' } },
+                        y: { title: { display: true, text: 'Amount' } }
+                    }
+                }
+            });
+        }
+
+        function updatePieChart(expenseByCategory) {
+            const labels = expenseByCategory.map(e => e.category);
+            const data = expenseByCategory.map(e => e.total);
+
+            if (pieChart) {
+                pieChart.destroy();
+            }
+
+            const ctx = document.getElementById('pie_chart').getContext('2d');
+            pieChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: [
+                            '#3366cc', '#dc3912', '#ff9900', '#109618', '#990099',
+                            '#0099c6', '#dd4477', '#66aa00', '#b82e2e', '#316395'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true
+                }
+            });
+        }
+
+        applyFiltersBtn.addEventListener('click', loadAnalytics);
+
+        // Обработчики для форм
+        addCategoryBtn.addEventListener('click', async () => {
+            const name = catNameInput.value.trim();
+            const type = catTypeSelect.value;
+            if (!name) {
+                alert("Category name is required");
+                return;
+            }
+
+            const res = await fetch(`${apiBaseUrl}/categories/${userId}`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ name, type })
+            });
+            if (res.ok) {
+                alert("Category added");
+                catNameInput.value = "";
+                catTypeSelect.value = "income";
+                await loadCategories();
+                await loadAnalytics();
+            } else {
+                alert("Error adding category");
+            }
+        });
+
+        addIncomeBtn.addEventListener('click', async () => {
+            const source = incomeSourceInput.value.trim();
+            const amount = parseFloat(incomeAmountInput.value);
+            const date = incomeDateInput.value;
+            const category_id = incomeCatSelect.value;
+
+            if (!source || !amount || !date) {
+                alert("Fill all the fields for Income");
+                return;
+            }
+
+            const body = { source, amount, date: new Date(date).toISOString(), category_id };
+
+            const res = await fetch(`${apiBaseUrl}/incomes/${userId}`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(body)
+            });
+
+            if (res.ok) {
+                alert("Income added");
+                incomeSourceInput.value = "";
+                incomeAmountInput.value = "";
+                incomeDateInput.value = "";
+                await loadAnalytics();
+            } else {
+                alert("Error adding income");
+            }
+        });
+
+        addExpenseBtn.addEventListener('click', async () => {
+            const description = expenseDescInput.value.trim();
+            const amount = parseFloat(expenseAmountInput.value);
+            const date = expenseDateInput.value;
+            const category_id = expenseCatSelect.value;
+
+            if (!amount || !date) {
+                alert("Amount and date are required for expense");
+                return;
+            }
+
+            const body = { description, amount, date: new Date(date).toISOString(), category_id };
+
+            const res = await fetch(`${apiBaseUrl}/expenses/${userId}`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(body)
+            });
+
+            if (res.ok) {
+                alert("Expense added");
+                expenseDescInput.value = "";
+                expenseAmountInput.value = "";
+                expenseDateInput.value = "";
+                await loadAnalytics();
+            } else {
+                alert("Error adding expense");
+            }
+        });
+
+        // Инициализация
+        (async () => {
+            // Предполагается, что userId хранится в cookie
+            userId = document.cookie.substring(document.cookie.indexOf("=") + 1);
+            await loadCategories();
+            await loadAnalytics();
+        })();
+    </script>
+</body>
+</html>

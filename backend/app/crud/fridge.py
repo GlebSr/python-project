@@ -19,7 +19,7 @@ class FridgeCRUD:
         result = await self.collection.update_one(
             {"user_id": user_id},
             {"$push": {"items": item_data}},
-            upsert=True  # Создать документ, если не существует
+            upsert=True
         )
         if result.modified_count > 0 or result.upserted_id is not None:
             return  item_data["id"]

@@ -449,7 +449,7 @@
             for (const pos in items) {
                 try {
                     const item = items[pos]
-                    const response = await fetch(`/api/products/${userId}/${item.product_id}`);
+                    const response = await fetch(`/api/products/${userId}?product_id=${item.product_id}`);
                     const product = await response.json();
 
                     // Определяем статус свежести на основе даты истечения срока
@@ -501,7 +501,7 @@
             }
         }
         async function deleteFridgeItem(userId, itemId) {
-            const response = await fetch(`/api/fridge/${userId}/items/${itemId}`, {
+            const response = await fetch(`/api/fridge/${userId}?item_id=${itemId}`, {
                 method: 'DELETE'
             });
             if (response.ok) {

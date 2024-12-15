@@ -28,13 +28,15 @@ class Reminder(CreateReminder):
 
 
 class CreateTask(BaseModel):
+    description: Optional[str] = None
     title: str
-    priority: PriorityLevel                      # Низкий, средний или высокий
+    priority: PriorityLevel                 # Низкий, средний или высокий
     due_date: Optional[datetime] = None # Дедлайн задачи
-    status: Status                        # В ожидании, выполнено и т.п.
+    status: Optional[Status] = Status.InProgress                      # В ожидании, выполнено и т.п.
     subtasks: Optional[list[str]] = [] # Список подзадач (можно расширить на отдельную модель)
 
 class UpdateTask(BaseModel):
+    description: Optional[str] = None
     id: str
     title: Optional[str]
     priority: Optional[PriorityLevel]
