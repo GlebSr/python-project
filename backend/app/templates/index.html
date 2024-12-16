@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ВСЁ ПОД КОНТРОЛЕМ</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #f8f3e9;
+            color: #555555;
+        }
+        .container {
+            max-width: 400px;
+            margin-top: 10%;
+            text-align: center;
+        }
+        h1 {
+            font-size: 2.5em;
+            color: #6d758f;
+            margin-bottom: 1.5em;
+        }
+        .btn-custom, .btn-custom-submit {
+            background-color: #92b4a7; /* Изменённый цвет кнопки */
+            border: none;
+            color: white;
+            font-size: 1.2em;
+        }
+        .btn-custom {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        .form-control, .btn-custom-submit {
+            height: 45px; /* Фиксированная высота для кнопки и поля */
+        }
+        .form-control {
+            background-color: #ece9e5;
+            border: none;
+        }
+        .btn-custom-submit {
+            background-color: #92b4a7; /* Совпадает с цветом основной кнопки */
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>ВСЁ ПОД КОНТРОЛЕМ</h1>
+
+        {% if not login %}
+            <form action="/login" method="post">
+                <div class="input-group mb-3">
+                    <input type="text" name="login" class="form-control" placeholder="Введите логин" required>
+                    <div class="input-group-append">
+                        <button class="btn btn-custom-submit" type="submit">Войти</button>
+                    </div>
+                </div>
+            </form>
+        {% else %}
+            <div class="d-grid gap-2">
+                <button class="btn btn-custom" onclick="window.location.href='/products'">Продукты</button>
+                <button class="btn btn-custom" onclick="window.location.href='/fridge'">Холодильник</button>
+                <button class="btn btn-custom" onclick="window.location.href='/budget'">Бюджет</button>
+                <button class="btn btn-custom" onclick="window.location.href='/tasks'">Напоминания</button>
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>
